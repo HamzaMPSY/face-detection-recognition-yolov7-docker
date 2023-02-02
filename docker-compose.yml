@@ -1,0 +1,53 @@
+version: "3"
+
+services:
+  face_recognizer:
+    container_name: face_recognizer
+    build: "./face_recognizer"
+    restart: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    volumes:
+      - ./dataset:/dataset
+      - ./test:/test
+      - ./face_recognizer:/src
+    ports:
+      - "5000:5000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+
+  face_detector:
+    container_name: face_detector
+    build: "./face_detector"
+    restart: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    depends_on:
+      - face_recognizer
+    environment:
+      - DISPLAY=unix$DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - API_LINK=face_recognizer
+      - API_PORT=5000
+    volumes:
+      - /dev/video0:/dev/video0
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./face_detector:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]

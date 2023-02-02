@@ -1,0 +1,5 @@
+face_recognition
+scipy
+flask
+werkzeug
+Pillow
